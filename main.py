@@ -1,18 +1,14 @@
 from typing import List, Tuple
 from collections import namedtuple
-import string
 
 
 from PIL import Image, ImageFont, ImageDraw
 
 PixelMapping = namedtuple("PixleMapping", ["chars", "weights"])
 
+CHARS = """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
 def computeMapping() -> PixelMapping:
-    m = []
-    for char in string.printable:
-        if char in list("\t\n\r\x0b\x0c"): continue
-        m.append((mean_char_pixel(char), char))
-    m.sort()
+    m = sorted([(mean_char_pixel(c), c) for c in CHARS])
     return PixelMapping(chars=[c for _, c in m], weights=[(w - m[0][0]) / (m[-1][0] - m[0][0]) for w, _ in m])
 
 def mean_char_pixel(char: str, font_size: int = 20, font_name: str = "arial.ttf") -> float:
