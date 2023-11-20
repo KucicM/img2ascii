@@ -2,7 +2,7 @@ from typing import List, Tuple
 from PIL import Image, ImageFont, ImageDraw
 
 class Img2Text:
-    __CHARS = """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
+    __CHARS = """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~ """
     __FONT = ImageFont.truetype("arial.ttf", 20)
     def __init__(self):
         m = sorted([(self._mean_char_pixel(c), c) for c in self.__CHARS])
