@@ -1,3 +1,4 @@
+from typing import List, Tuple
 from collections import namedtuple
 import string
 
@@ -23,6 +24,24 @@ def mean_char_pixel(char: str, font_size: int = 20, font_name: str = "arial.ttf"
     pixles = img.getdata()
     return -sum(pixles) // len(pixles)
 
+
+def render(img: List[float], size: Tuple[int, int], map: PixelMapping) -> str:
+    _, w = size
+    ret, line = [], []
+    for i, pixel in enumerate(img):
+        line.append(closes(map, pixel))
+        if len(line) == w:
+            ret.append("".join(line))
+            line = []
+    return "\n".join(ret)
+
+def closes(map: PixelMapping, pixel: float) -> str:
+    min_c, min_v = "", float("inf")
+    for c, v in zip(map.chars, map.weights):
+        if (diff := abs(v - pixel)) < min_v:
+            min_c, min_v = c, diff
+    return min_c
+
 mapping = computeMapping()
 
 GRID_SIZE = (70, 70)
@@ -38,13 +57,5 @@ img_pixels = resize_img.getdata()
 min_val, max_val = min(img_pixels), max(img_pixels)
 img_pixels = [(p - min_val) / (max_val - min_val) for p in img_pixels]
 
-i = 0
-for _ in range(GRID_SIZE[1]):
-    for _ in range(GRID_SIZE[0]):
-        min_distance, min_char = float("inf"), ""
-        pixel, i = img_pixels[i], i + 1
-        for val, char in zip(mapping.weights, mapping.chars):
-            if (diff := abs(val - pixel)) < min_distance:
-                min_distance, min_char = diff, char
-        print(min_char, end="")
-    print()
+print(render(img_pixels, resize_img.size, mapping))
+
