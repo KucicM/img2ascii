@@ -20,7 +20,7 @@ class Img2Text:
         rimg = img.resize(new_size, Image.HAMMING)
         pixels = self._norm_img(rimg.getdata())
         chars = [self._find(p) for p in pixels]
-        batches = [chars[i:i+rimg.size[1]] for i in range(0, len(chars), rimg.size[1])]
+        batches = [chars[i:i+rimg.size[0]] for i in range(0, len(chars), rimg.size[0])]
         return "\n".join(("".join(b) for b in batches))
     
     def _norm_img(self, pixels: List[int]) -> List[float]:
@@ -34,6 +34,5 @@ class Img2Text:
 if __name__ == "__main__":
     img = Image.open("badger.jpg").convert("L")
     img2Text = Img2Text()
-    print(img2Text.render(img, (70, 70)))
-
+    print(img2Text.render(img, (128, 64)))
 
