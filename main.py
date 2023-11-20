@@ -28,7 +28,13 @@ class Img2Text:
         return [(p - min_val) / (max_val - min_val) for p in pixels]
 
     def _find(self, pixel: float) -> str:
-        return min(zip(self.ws, self.chars), key=lambda x: abs(x[0] - pixel))[1]
+        l, h = 0, len(self.ws) -1
+        while l <= h:
+            mid = (h + l) // 2
+            if pixel < self.ws[mid]: h = mid - 1
+            elif pixel > self.ws[mid]: l = mid + 1
+            else: return self.chars[mid]
+        return self.chars[l] if (self.ws[l] - pixel) < (pixel - self.ws[h]) else self.chars[h]
 
 
 if __name__ == "__main__":
