@@ -28,7 +28,7 @@ def mean_char_pixel(char: str, font_size: int = 20, font_name: str = "arial.ttf"
 def render(img: List[float], size: Tuple[int, int], map: PixelMapping) -> str:
     _, w = size
     ret, line = [], []
-    for i, pixel in enumerate(img):
+    for pixel in img:
         line.append(closes(map, pixel))
         if len(line) == w:
             ret.append("".join(line))
