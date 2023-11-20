@@ -1,57 +1,39 @@
 from typing import List, Tuple
-from collections import namedtuple
-
-
 from PIL import Image, ImageFont, ImageDraw
 
-PixelMapping = namedtuple("PixleMapping", ["chars", "weights"])
+class Img2Text:
+    __CHARS = """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
+    __FONT = ImageFont.truetype("arial.ttf", 20)
+    def __init__(self):
+        m = sorted([(self._mean_char_pixel(c), c) for c in self.__CHARS])
+        self.chars = [c for _, c in m]
+        self.ws = [(w - m[0][0]) / (m[-1][0] - m[0][0]) for w, _ in m]
 
-CHARS = """0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~"""
-def computeMapping() -> PixelMapping:
-    m = sorted([(mean_char_pixel(c), c) for c in CHARS])
-    return PixelMapping(chars=[c for _, c in m], weights=[(w - m[0][0]) / (m[-1][0] - m[0][0]) for w, _ in m])
+    def _mean_char_pixel(self, char: str) -> float:
+        img = Image.new('L', self.__FONT.getbbox(char)[2:], color=255)
+        draw = ImageDraw.Draw(img)
+        draw.text((0, 0), char, font=self.__FONT, fill=0)
+        pixles = img.getdata()
+        return -sum(pixles) // len(pixles)
 
-def mean_char_pixel(char: str, font_size: int = 20, font_name: str = "arial.ttf") -> float:
-    font = ImageFont.truetype(font_name, font_size)
-    _, _, x1, y1 = font.getbbox(char)
-    img = Image.new('L', (x1, y1), color=255)
-    draw = ImageDraw.Draw(img)
-    draw.text((0, 0), char, font=font, fill=0)
-    pixles = img.getdata()
-    return -sum(pixles) // len(pixles)
+    def render(self, img, new_size: Tuple[int, int]) -> str:
+        rimg = img.resize(new_size, Image.HAMMING)
+        pixels = self._norm_img(rimg.getdata())
+        chars = [self._find(p) for p in pixels]
+        batches = [chars[i:i+rimg.size[1]] for i in range(0, len(chars), rimg.size[1])]
+        return "\n".join(("".join(b) for b in batches))
+    
+    def _norm_img(self, pixels: List[int]) -> List[float]:
+        min_val, max_val = min(pixels), max(pixels)
+        return [(p - min_val) / (max_val - min_val) for p in pixels]
+
+    def _find(self, pixel: float) -> str:
+        return min(zip(self.ws, self.chars), key=lambda x: abs(x[0] - pixel))[1]
 
 
-def render(img: List[float], size: Tuple[int, int], map: PixelMapping) -> str:
-    _, w = size
-    ret, line = [], []
-    for pixel in img:
-        line.append(closes(map, pixel))
-        if len(line) == w:
-            ret.append("".join(line))
-            line = []
-    return "\n".join(ret)
+if __name__ == "__main__":
+    img = Image.open("badger.jpg").convert("L")
+    img2Text = Img2Text()
+    print(img2Text.render(img, (70, 70)))
 
-def closes(map: PixelMapping, pixel: float) -> str:
-    min_c, min_v = "", float("inf")
-    for c, v in zip(map.chars, map.weights):
-        if (diff := abs(v - pixel)) < min_v:
-            min_c, min_v = c, diff
-    return min_c
-
-mapping = computeMapping()
-
-GRID_SIZE = (70, 70)
-
-path = "badger.jpg"
-img = Image.open(path).convert("L")
-print(f"original size {img.size}")
-
-resize_img = img.resize(GRID_SIZE, Image.HAMMING)
-print(f"original size {resize_img.size}")
-
-img_pixels = resize_img.getdata()
-min_val, max_val = min(img_pixels), max(img_pixels)
-img_pixels = [(p - min_val) / (max_val - min_val) for p in img_pixels]
-
-print(render(img_pixels, resize_img.size, mapping))
 
